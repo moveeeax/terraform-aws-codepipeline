@@ -41,7 +41,7 @@ module "codepipeline" {
   role_arn             = var.pipeline_role_arn
   artifact_bucket      = var.artifact_bucket
   connection_arn       = var.connection_arn
-  source_repository_id = "cybercapybara/example-app"
+  source_repository_id = "moveeeax/example-app"
   build_project_name   = "example-build"
 
   tags = {

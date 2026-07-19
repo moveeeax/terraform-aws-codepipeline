@@ -9,13 +9,13 @@ connection and runs a CodeBuild project, wiring artifacts through an S3 store.
 
 ```hcl
 module "codepipeline" {
-  source = "github.com/cybercapybara/terraform-aws-codepipeline"
+  source = "github.com/moveeeax/terraform-aws-codepipeline"
 
   name                 = "app-pipeline"
   role_arn             = aws_iam_role.pipeline.arn
   artifact_bucket      = "pipeline-artifacts-prod"
   connection_arn       = aws_codestarconnections_connection.this.arn
-  source_repository_id = "cybercapybara/app"
+  source_repository_id = "moveeeax/app"
   build_project_name   = "app-build"
 
   tags = {
