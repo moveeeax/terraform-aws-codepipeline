@@ -5,6 +5,18 @@ resource "aws_codepipeline" "this" {
   artifact_store {
     location = var.artifact_bucket
     type     = "S3"
+
+    # Omitting this block leaves artifacts on the AWS-managed key for S3.
+    # Supplying a customer-managed key lets the artifact store be encrypted
+    # with a key whose policy and rotation the caller controls.
+    dynamic "encryption_key" {
+      for_each = var.artifact_encryption_key_id == null ? [] : [var.artifact_encryption_key_id]
+
+      content {
+        id   = encryption_key.value
+        type = "KMS"
+      }
+    }
   }
 
   stage {

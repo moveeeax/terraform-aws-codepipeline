@@ -26,8 +26,14 @@ variable "artifact_bucket" {
 }
 
 variable "connection_arn" {
-  description = "ARN of the CodeStar connection."
+  description = "ARN of the CodeConnections connection."
   type        = string
+}
+
+variable "artifact_encryption_key_id" {
+  description = "Optional customer-managed KMS key for the artifact store."
+  type        = string
+  default     = null
 }
 
 provider "aws" {
@@ -43,6 +49,8 @@ module "codepipeline" {
   connection_arn       = var.connection_arn
   source_repository_id = "moveeeax/example-app"
   build_project_name   = "example-build"
+
+  artifact_encryption_key_id = var.artifact_encryption_key_id
 
   tags = {
     Environment = "sandbox"
