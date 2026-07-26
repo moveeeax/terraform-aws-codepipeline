@@ -38,10 +38,10 @@ variable "artifact_encryption_key_id" {
 
   validation {
     condition = var.artifact_encryption_key_id == null || can(regex(
-      "^(arn:aws[a-zA-Z-]*:kms:[a-z0-9-]+:[0-9]{12}:(key|alias)/.+|alias/.+|[0-9a-fA-F-]{36})$",
+      "^(arn:aws[a-zA-Z-]*:kms:[a-z0-9-]+:[0-9]{12}:(key|alias)/.+|alias/.+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
       coalesce(var.artifact_encryption_key_id, "alias/unset")
     ))
-    error_message = "The artifact_encryption_key_id must be a KMS key ARN, key ID, or alias/<name>."
+    error_message = "The artifact_encryption_key_id must be a KMS key ARN, a key ID (UUID, e.g. 1234abcd-12ab-34cd-56ef-1234567890ab), or alias/<name>."
   }
 }
 

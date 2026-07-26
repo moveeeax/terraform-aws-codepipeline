@@ -60,6 +60,65 @@ run "kms_alias_is_accepted" {
   }
 }
 
+run "bare_kms_key_id_is_accepted" {
+  variables {
+    artifact_encryption_key_id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+
+  assert {
+    condition     = length(one(aws_codepipeline.this.artifact_store).encryption_key) == 1
+    error_message = "A bare KMS key ID (UUID, no arn:/alias/ prefix) must be accepted as the artifact store key."
+  }
+
+  assert {
+    condition     = one(one(aws_codepipeline.this.artifact_store).encryption_key).id == "1234abcd-12ab-34cd-56ef-1234567890ab"
+    error_message = "The artifact store must use the supplied bare KMS key ID."
+  }
+}
+
+run "rejects_kms_key_id_look_alike" {
+  command = plan
+
+  # 36 characters of hex/dash, same alphabet as a real key ID, but not shaped
+  # like the UUID (8-4-4-4-12) that KMS actually issues. The old validation
+  # regex accepted any 36-char hex/dash string, so a typo like this would
+  # have passed plan and only failed later as an opaque CodePipeline API
+  # error at apply time.
+  variables {
+    artifact_encryption_key_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+
+  expect_failures = [var.artifact_encryption_key_id]
+}
+
+run "multiple_optional_inputs_together" {
+  # Exercise every optional input at once (non-default branch, a KMS alias,
+  # and custom tags) to catch interactions that single-flag tests would miss.
+  variables {
+    source_branch              = "release/2026.07"
+    artifact_encryption_key_id = "alias/codepipeline-artifacts"
+    tags = {
+      Environment = "staging"
+      Owner       = "platform-team"
+    }
+  }
+
+  assert {
+    condition     = aws_codepipeline.this.stage[0].action[0].configuration["BranchName"] == "release/2026.07"
+    error_message = "A non-default source_branch must still be wired into the source stage when other optional inputs are also set."
+  }
+
+  assert {
+    condition     = one(one(aws_codepipeline.this.artifact_store).encryption_key).id == "alias/codepipeline-artifacts"
+    error_message = "The KMS alias must still be wired into the artifact store when other optional inputs are also set."
+  }
+
+  assert {
+    condition     = aws_codepipeline.this.tags["Environment"] == "staging" && aws_codepipeline.this.tags["Owner"] == "platform-team"
+    error_message = "Custom tags must still be applied when other optional inputs are also set."
+  }
+}
+
 run "stages_are_wired_source_to_build" {
   assert {
     condition     = length(aws_codepipeline.this.stage) == 2
